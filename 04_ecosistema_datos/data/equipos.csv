@@ -1,0 +1,4 @@
+id,codigo,area,tipo
+1,PUMP101,Molienda,Bomba centrífuga
+2,PUMP102,Molienda,Bomba centrífuga
+3,MILL201,Molienda,Molino SAG
