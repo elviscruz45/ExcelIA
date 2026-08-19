@@ -8,17 +8,140 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MOD_DIR = ROOT / "00_python_para_ingenieros"
 
-KERNEL = {"display_name": "ExcelA (uv)", "language": "python", "name": "excela"}
+# Compatible con Jupyter local (uv) y Google Colab
+KERNEL = {"display_name": "Python 3", "language": "python", "name": "python3"}
+
+COLAB_INTRO = (
+    "> **Google Colab:** Ejecuta primero la celda **Configuración del entorno**. "
+    "Detecta Colab automáticamente, instala dependencias si faltan y prepara carpetas `data/` y `outputs/`.\n"
+    "> **Jupyter local:** La misma celda funciona con el entorno ExcelA (`uv sync`)."
+)
 
 SETUP = """import os
+import sys
 from pathlib import Path
 
-MOD_DIR = Path.cwd()
+def _in_colab():
+    try:
+        import google.colab  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+IN_COLAB = _in_colab()
+
+if IN_COLAB:
+    _candidatos = [
+        Path("/content/ExcelA/00_python_para_ingenieros"),
+        Path("/content/drive/MyDrive/ExcelA/00_python_para_ingenieros"),
+        Path("/content/drive/MyDrive/Colab Notebooks/ExcelA/00_python_para_ingenieros"),
+        Path("/content/00_python_para_ingenieros"),
+        Path.cwd(),
+    ]
+    MOD_DIR = next(
+        (p for p in _candidatos if (p / "README_modulo0.md").exists() or (p / "data").is_dir()),
+        Path("/content/00_python_para_ingenieros"),
+    )
+    print("Entorno: Google Colab")
+else:
+    MOD_DIR = Path.cwd()
+    print("Entorno: Jupyter local")
+
+MOD_DIR.mkdir(parents=True, exist_ok=True)
 os.chdir(MOD_DIR)
 OUTPUT_DIR = MOD_DIR / "outputs"
-OUTPUT_DIR.mkdir(exist_ok=True)
 DATA_DIR = MOD_DIR / "data"
+OUTPUT_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(exist_ok=True)
+print(f"Directorio del módulo: {MOD_DIR}")
 """
+
+SETUP_PANDAS = """import os
+import sys
+import subprocess
+from pathlib import Path
+
+def _in_colab():
+    try:
+        import google.colab  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+IN_COLAB = _in_colab()
+
+try:
+    import pandas as pd
+    import matplotlib.pyplot as plt
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "pandas", "matplotlib"])
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
+if IN_COLAB:
+    try:
+        get_ipython().run_line_magic("matplotlib", "inline")
+    except NameError:
+        pass
+
+if IN_COLAB:
+    _candidatos = [
+        Path("/content/ExcelA/00_python_para_ingenieros"),
+        Path("/content/drive/MyDrive/ExcelA/00_python_para_ingenieros"),
+        Path("/content/drive/MyDrive/Colab Notebooks/ExcelA/00_python_para_ingenieros"),
+        Path("/content/00_python_para_ingenieros"),
+        Path.cwd(),
+    ]
+    MOD_DIR = next(
+        (p for p in _candidatos if (p / "README_modulo0.md").exists() or (p / "data").is_dir()),
+        Path("/content/00_python_para_ingenieros"),
+    )
+    print("Entorno: Google Colab")
+else:
+    MOD_DIR = Path.cwd()
+    print("Entorno: Jupyter local")
+
+MOD_DIR.mkdir(parents=True, exist_ok=True)
+os.chdir(MOD_DIR)
+OUTPUT_DIR = MOD_DIR / "outputs"
+DATA_DIR = MOD_DIR / "data"
+OUTPUT_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(exist_ok=True)
+
+DATA_PATH = DATA_DIR / "lecturas_turno.csv"
+if not DATA_PATH.exists():
+    import numpy as np
+    from datetime import datetime, timedelta
+    rng = np.random.default_rng(42)
+    start = datetime(2025, 3, 1, 8, 0)
+    rows = []
+    for h in range(24):
+        ts = start + timedelta(hours=h)
+        for var, unidad, base, noise in [("TEMP_RODAMIENTO", "°C", 70.0, 3.0), ("VIBRACION_RMS", "mm/s", 2.5, 0.3)]:
+            rows.append({
+                "Timestamp": ts, "Equipo": "PUMP101", "Variable": var,
+                "Valor": round(base + rng.normal(0, noise), 2), "Unidad": unidad,
+                "Quality": "BAD" if rng.random() < 0.03 else "GOOD",
+            })
+    pd.DataFrame(rows).to_csv(DATA_PATH, index=False)
+    print(f"Datos generados en Colab: {DATA_PATH}")
+
+print(f"Directorio del módulo: {MOD_DIR}")
+"""
+
+
+def colab_config_cell() -> list[dict]:
+    return [
+        md("## Configuración del entorno\n\n" + COLAB_INTRO),
+        code(SETUP),
+    ]
+
+
+def colab_config_pandas() -> list[dict]:
+    return [
+        md("## Configuración del entorno\n\n" + COLAB_INTRO),
+        code(SETUP_PANDAS),
+    ]
 
 
 def md(text: str) -> dict:
@@ -41,6 +164,7 @@ def notebook(cells: list[dict]) -> dict:
         "metadata": {
             "kernelspec": KERNEL,
             "language_info": {"name": "python", "pygments_lexer": "ipython3"},
+            "colab": {"provenance": []},
         },
         "nbformat": 4,
         "nbformat_minor": 5,
@@ -93,11 +217,11 @@ def nb01() -> list[dict]:
             "más rápido que hacerlo manualmente en Excel."
         ),
         desde_cero(
-            "Un **programa** es una lista de instrucciones. En Jupyter, cada **celda de código** es una instrucción "
-            "que ejecutas con **Shift + Enter**."
+            "Un **programa** es una lista de instrucciones. En Jupyter o Google Colab, cada **celda de código** "
+            "es una instrucción que ejecutas con **Shift + Enter** (Colab) o el botón ▶."
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code('print("Monitoreo PUMP101 activo — turno día iniciado")'),
         code(
             """# Mostrar información del entorno de trabajo
@@ -110,7 +234,8 @@ print("Carpeta de salidas:", OUTPUT_DIR)
             "## 4. Errores comunes\n\n"
             "- **Olvidar ejecutar la celda:** El código no corre solo; presiona Shift + Enter.\n"
             "- **SyntaxError:** Revisa comillas, paréntesis y dos puntos (`:`).\n"
-            "- **NameError:** Ejecutaste celdas fuera de orden; vuelve arriba y ejecuta desde el inicio."
+            "- **NameError:** Ejecutaste celdas fuera de orden; vuelve arriba y ejecuta desde el inicio.\n"
+            "- **En Colab:** Si cambias de notebook, vuelve a ejecutar la celda de configuración."
         ),
         *ejercicio(
             "Tu primer reporte de turno",
@@ -119,9 +244,9 @@ print("Carpeta de salidas:", OUTPUT_DIR)
             'equipo = "PUMP101"\nturno = "Día"\nestado = "En servicio"\nprint(f"{equipo} | Turno {turno} | Estado: {estado}")',
         ),
         resumen(
-            "- Python se ejecuta celda a celda en Jupyter.\n"
+            "- Python se ejecuta celda a celda en Jupyter o Colab.\n"
             "- `print()` muestra texto en pantalla.\n"
-            "- El entorno ExcelA ya tiene las librerías que usarás después.",
+            "- La celda de configuración prepara carpetas `data/` y `outputs/`.",
             "`00_02_variables_y_unidades.ipynb`",
         ),
     ]
@@ -142,8 +267,8 @@ def nb02() -> list[dict]:
             "En Excel, una celda con valor `75.4` es como una variable. "
             "En Python escribes: `temp_rodamiento = 75.4`"
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code(
             """# Entero: horas de operación acumuladas
 horas_operacion = 7200
@@ -205,8 +330,8 @@ def nb03() -> list[dict]:
             "`=A1*B1` en Excel equivale a `corriente_a * tension_v` en Python. "
             "`=A1>70` devuelve VERDADERO/FALSO; en Python es `temp > 70`."
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code(
             """# Potencia del motor del molino: P = I × V
 corriente_a = 320
@@ -276,8 +401,8 @@ def nb04() -> list[dict]:
             "Un rango `A1:A24` en Excel es similar a una lista en Python. "
             "Una fila con columnas Tag | Valor | Unidad es similar a un diccionario."
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code(
             """# 24 lecturas horarias de vibración (mm/s) — turno de un día
 lecturas_vibracion = [
@@ -350,8 +475,8 @@ def nb05() -> list[dict]:
             "`=SI(A1>4,5;\"Alerta\";\"Normal\")` en Excel equivale a:\n"
             "```python\nif vibracion > 4.5:\n    estado = \"Alerta\"\nelse:\n    estado = \"Normal\"\n```"
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code(
             """def clasificar_vibracion(rms, umbral_alerta=4.5, umbral_critico=7.1):
     if rms >= umbral_critico:
@@ -420,8 +545,8 @@ def nb06() -> list[dict]:
         puente_excel(
             "`=PROMEDIO(A1:A24)` procesa 24 celdas. En Python, un `for` recorre la lista y tú decides qué calcular."
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code(
             """# for: imprimir estado de cada bomba en servicio
 bombas = ["PUMP101", "PUMP102", "PUMP103"]
@@ -497,8 +622,8 @@ def nb07() -> list[dict]:
             "Una **función personalizada** o **macro** en Excel es similar a `def mi_funcion():` en Python. "
             "La ventaja: puedes combinarlas en pipelines de análisis."
         ),
+        *colab_config_cell(),
         md("## 3. Ejemplos guiados"),
-        code(SETUP),
         code(
             """def calcular_disponibilidad(mtbf_horas, mttr_horas):
     \"\"\"Disponibilidad = MTBF / (MTBF + MTTR)\"\"\"
@@ -561,16 +686,8 @@ def nb08() -> list[dict]:
             "`pd.read_csv('archivo.csv')` carga un CSV como DataFrame. "
             "`.head()` es como ver las primeras filas; `.describe()` como estadísticas descriptivas."
         ),
+        *colab_config_pandas(),
         md("## 3. Ejemplos guiados"),
-        code(
-            SETUP
-            + """
-import matplotlib.pyplot as plt
-import pandas as pd
-
-DATA_PATH = DATA_DIR / "lecturas_turno.csv"
-"""
-        ),
         code(
             """# Leer CSV de lecturas de turno
 df = pd.read_csv(DATA_PATH, parse_dates=["Timestamp"])

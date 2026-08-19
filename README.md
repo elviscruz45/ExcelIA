@@ -2,6 +2,16 @@
 
 Programa de **6 horas** (3 módulos × 2h) más prerequisito de Python. Orientado a ingenieros de mantenimiento y operaciones.
 
+## Antes del Módulo 0
+
+Si el alumno **no ha usado Colab ni internet para trabajar**, lee primero (sesión ~45 min con instructor):
+
+| Guía | Contenido |
+|------|-----------|
+| [`GUIA_00_antes_de_empezar.md`](00_python_para_ingenieros/GUIA_00_antes_de_empezar.md) | Colab, navegador, archivos, checklist |
+| [`GUIA_MAPA_CURSO_MINERIA50.md`](GUIA_MAPA_CURSO_MINERIA50.md) | Mapa completo del curso y visión Minería 5.0 |
+| [`GLOSARIO_PLANTA_TECNOLOGIA.md`](GLOSARIO_PLANTA_TECNOLOGIA.md) | Términos planta ↔ tecnología (consulta durante el curso) |
+
 ## Mapa del programa (6 horas)
 
 | Módulo | Horas | Carpeta | Contenido |
@@ -10,7 +20,7 @@ Programa de **6 horas** (3 módulos × 2h) más prerequisito de Python. Orientad
 | **IV-B: Ecosistema de Datos** | 2h | `04_ecosistema_datos/` | Flujo OT/IT, Excel, Power BI, SQL Supabase, Python |
 | **IV-C: IA Predictiva de Fallas** | 2h | `05_ia_predictiva/` | ML, anomalías, RUL, pipeline de alertas |
 
-**Prerequisito (fuera de las 6h):** [`00_python_para_ingenieros/`](00_python_para_ingenieros/) (~4–5h)
+**Prerequisito (fuera de las 6h):** [`00_python_para_ingenieros/`](00_python_para_ingenieros/) (~4–5h) — compatible con **Google Colab** y Jupyter local
 
 **Profundización opcional:** Labs `05_`–`08_` (Weibull, vibración, ML, IA)
 
@@ -63,6 +73,7 @@ uv run python 05_ia_predictiva/script_generacion.py
 
 ## Guías por módulo
 
+- Antes del Módulo 0: [`GUIA_00_antes_de_empezar.md`](00_python_para_ingenieros/GUIA_00_antes_de_empezar.md) · [`GUIA_MAPA_CURSO_MINERIA50.md`](GUIA_MAPA_CURSO_MINERIA50.md)
 - Prerequisito: [`00_python_para_ingenieros/README_modulo0.md`](00_python_para_ingenieros/README_modulo0.md)
 - Módulo A: [`01_PI_systems/README_modulo_PI.md`](01_PI_systems/README_modulo_PI.md)
 - Módulo B: [`04_ecosistema_datos/README_modulo_ecosistema.md`](04_ecosistema_datos/README_modulo_ecosistema.md)
